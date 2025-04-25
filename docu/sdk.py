@@ -1,4 +1,6 @@
 
+#only a test how it works with the sdk to get the Master Items
+
 from qlik_sdk import Apps, AuthType, Config
 
 
