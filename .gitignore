@@ -2,3 +2,5 @@
 .env.example
 .env.local
 .env.staging
+__pycache__
+classes/__pycache__
