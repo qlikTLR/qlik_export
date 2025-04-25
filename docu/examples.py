@@ -3,9 +3,9 @@
 import asyncio
 import json
 import os
-from qlik_wrapper import QlikWrapper
-from terminal_helper import TerminalHelper
-from dotenv import load_dotenv
+from classes.qlik_wrapper import QlikWrapper
+from classes.terminal_helper import TerminalHelper
+from dotenv import load_dotenv # type: ignore
 
 load_dotenv()
 
@@ -16,6 +16,7 @@ APP_ID = "37e72b96-b3f2-445b-89a8-d79c90c965f3"
 QLIK_TENANT = "qlikinternal.us.qlikcloud.com"
 SPACE_ID = "609448f56d3d560001283b3c"
 testUser = "YnN5jjuwGn9aQSOqm6C9BMx_Z4Kx_d9d"
+
 
 async def export_masteritems():
 
@@ -62,6 +63,12 @@ async def export_masteritems():
     measures = await qlik.get_measure_list_detailed()
     TerminalHelper.print_bullet_from_array(measures,["Title", "Tags", "Expression", "Label", "Description"])
    
+    variables = await qlik.get_var_list_detailed()
+    TerminalHelper.write_title('   ------- Variables ---------')
+    TerminalHelper.print_bullet_from_array(variables,["ID","Title", "Valuen", "Tags"])
+   
+
+
     await qlik.close()
 
 if __name__ == "__main__":

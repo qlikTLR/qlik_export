@@ -1,16 +1,13 @@
 # QlikWrapper.py
-# pip install aiohttp asyncio dotenv websockets 
+# pip install aiohttp asyncio dotenv websockets openpyxl
 # written by Thomas Lindackers
 # owned by QlikTech 
 # Version 1.0.0
 
 import ssl
 import json
-from aiohttp import ClientSession, WSMsgType
-
+from aiohttp import ClientSession, WSMsgType # type: ignore
 from datetime import datetime
-
-
 
 class QlikWrapper:
     """
@@ -268,6 +265,38 @@ class QlikWrapper:
         layout = await self._get_layout(definition)
         return layout.get("result", {}).get("qLayout", {}).get("qMeasureList", {}).get("qItems", [])
     
+
+    async def get_var_list(self):
+        """
+        Retrieves a list of all variables in the currently opened Qlik app.
+
+        This method creates a session object definition for `VariableList`, sends it to the 
+        Qlik Engine, and retrieves the layout to extract the list of variables.
+
+        Returns:
+            list: A list of dictionaries, each representing a variable with details
+                such as name, definition, tags, and ID.
+
+        Notes:
+            This function assumes a WebSocket connection is already established and an app is open.
+            If no variables are found or an error occurs, an empty list is returned.
+        """
+        definition = {
+            "qInfo": {"qType": "VariableList"},
+            "qVariableListDef": {
+                "qType": "variable",
+                "qData": {
+                    "tags": "/tags",
+                    "title": "/title",
+                    "definition": "/definition"
+                }
+            }
+        }
+
+        layout = await self._get_layout(definition)
+        return layout.get("result", {}).get("qLayout", {}).get("qVariableList", {}).get("qItems", [])
+
+
     async def get_measure(self, measure_id):
         """
         Retrieves the full layout information of a specific master measure in the opened Qlik app.
@@ -398,6 +427,7 @@ class QlikWrapper:
                     dim_type = "multi" if grouping == "M" else "single"
 
                     detailed_dimensions.append([
+                        dim_id,
                         dim_title,
                         description,
                         tags,
@@ -432,6 +462,7 @@ class QlikWrapper:
                 try:
                     layout = await self.get_measure(measure_id)
                     detailed_measures.append([
+                        measure_id,
                         measure_title,  # title
                         layout.get("qMeta", {}).get("tags", []),  # tags
                         layout.get("qMeasure", {}).get("qDef", ""),  # expression
@@ -444,6 +475,121 @@ class QlikWrapper:
                 print(f"❗ Skipping measure without qId: {measure}")
 
         return detailed_measures
+
+    async def get_var_list_detailed(self):
+        """
+        Returns variable data prepared for terminal output.
+
+        Returns:
+            list: A list of lists, where each inner list contains:
+                [ID, Title (qName), Value (qDefinition), Tags]
+        """
+        raw_vars = await self.get_var_list()
+        return [
+            [
+                item.get("qInfo", {}).get("qId", ""),
+                item.get("qName", ""),
+                item.get("qDefinition", ""),
+                item.get("qData", {}).get("tags", [])
+            ]
+            for item in raw_vars
+        ]
+    
+    async def get_masteritems_detailed(self, include_variables=True, columns=None):
+        """
+        Retrieves detailed information about dimensions, measures, and optionally variables,
+        combining them into a single list with the specified columns.
+
+        You can control which columns to include by passing a list of column names
+        as the 'columns' parameter. If 'columns' is None, all columns will be included by default.
+
+        Parameters:
+            columns (list, optional): A list of column names to include in the output. 
+                                    Available options are ["ID", "Title", "Description", "Value", "Tags", "Type", "ItemType"].
+                                    If None, all columns will be shown by default.
+            include_variables (bool, optional): A flag to control whether variables should be included. 
+                                                Defaults to True (includes variables).
+
+        Returns:
+            list: A list of lists, each containing the requested columns.
+        """
+        # Default columns if none are provided
+        all_columns = ["ID", "Title", "Description", "Value", "Tags", "Type", "ItemType"]
+        if columns is None:
+            columns = all_columns
+
+        # Getting the detailed lists
+        dimensions = await self.get_dimension_list_detailed()
+        measures = await self.get_measure_list_detailed()
+        variables = await self.get_var_list_detailed() if include_variables else []
+
+        # Combine the data from dimensions, measures, and variables
+        combined_data = []
+
+        # Process Dimensions
+        for dim in dimensions:
+            row = []
+            if "ID" in columns:
+                row.append(dim[0])  # ID
+            if "Title" in columns:
+                row.append(dim[1])  # Title
+            if "Description" in columns:
+                # Only append Description if it exists
+                description = dim[2] if dim[2] else ""  # Default to empty if no description
+                row.append(description)
+            if "Value" in columns:
+                row.append(dim[3])  # Field Definitions (Expression for Dimensions)
+            if "Tags" in columns:
+                row.append(dim[4])  # Field Labels (Label for Dimensions)
+            if "Type" in columns:
+                row.append(dim[5])  # Type (multi or single)
+            if "ItemType" in columns:
+                row.append("Dimension")
+            combined_data.append(row)
+
+        # Process Measures
+        for measure in measures:
+            row = []
+            if "ID" in columns:
+                row.append(measure[0])  # ID
+            if "Title" in columns:
+                row.append(measure[1])  # Title
+            if "Description" in columns:
+                # Only append Description if it exists
+                description = measure[5] if measure[5] else ""  # Default to empty if no description
+                row.append(description)
+            if "Value" in columns:
+                row.append(measure[3])  # Expression
+            if "Tags" in columns:
+                row.append(measure[2])  # Tags
+            if "Type" in columns:
+                row.append("")  # Type is not applicable for Measures
+            if "ItemType" in columns:
+                row.append("Measure")
+            combined_data.append(row)
+
+        # Process Variables if include_variables is True
+        if include_variables:
+            for variable in variables:
+                row = []
+                if "ID" in columns:
+                    row.append(variable[0])  # ID
+                if "Title" in columns:
+                    row.append(variable[1])  # Title
+                if "Description" in columns:
+                    # Variables do not have Description in the data, so append empty string
+                    row.append("")  # Description
+                if "Value" in columns:
+                    row.append(variable[2])  # Value (qDefinition for Variables)
+                if "Tags" in columns:
+                    row.append(variable[3])  # Tags
+                if "Type" in columns:
+                    row.append("")  # Type is not applicable for Variables
+                if "ItemType" in columns:
+                    row.append("Variable")
+                combined_data.append(row)
+
+        return combined_data
 
     
     async def close(self):
