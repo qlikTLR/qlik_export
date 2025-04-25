@@ -44,7 +44,7 @@ async def export_masteritems():
 
     ws2 = wb.create_sheet(title="Masteritems")
     
-    columns = ["ID", "Title", "Value", "Tags", "Type", "ItemType"]
+    columns = ["ID", "Title", "Description", "Expression", "Tags", "Type", "ItemType"]
     for col_num, column_title in enumerate(columns, start=1):
         col_letter = get_column_letter(col_num)
         ws2[f"{col_letter}1"] = column_title  
