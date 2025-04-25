@@ -4,3 +4,4 @@
 .env.staging
 __pycache__
 classes/__pycache__
+.DS_STORE
