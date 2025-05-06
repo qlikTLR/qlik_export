@@ -23,8 +23,8 @@ async def export_masteritems():
     # Init the the Wrapper
     qlik = QlikWrapper(QLIK_TENANT, API_KEY)
    
-    apps = await qlik.get_app_list()
-    TerminalHelper.print_array(apps, f"   📁 {len(apps)} Apps found")
+    #apps = await qlik.get_app_list()
+    #TerminalHelper.print_array(apps, f"   📁 {len(apps)} Apps found")
 
     space_name = await qlik.get_space_name(SPACE_ID)  # Simple get an Space Name
     apps_in_space = await qlik.get_app_list(SPACE_ID)
@@ -34,12 +34,12 @@ async def export_masteritems():
     await qlik.connect(APP_ID)
 
     # Simple Call to get only the App Name
-    app_name = await qlik.get_app_name(APP_ID) 
-    print(f"   Appname: '{app_name}'")
+    #app_name = await qlik.get_app_name(APP_ID) 
+    #print(f"   Appname: '{app_name}'")
 
     # Gets Detailed App Infos what needs 3 different API Calls normaly
-    app_info = await qlik.get_app_info(APP_ID) 
-    TerminalHelper.print_single_array(app_info, 'App Infos','   ')
+    #app_info = await qlik.get_app_info(APP_ID) 
+    #TerminalHelper.print_single_array(app_info, 'App Infos','   ')
 
 
     # G
@@ -57,15 +57,18 @@ async def export_masteritems():
     # ----- END Get Regular JSON Response -------
     
     # Get a detailed List as Array (combine getList and Loop GetDim)
-    dimensions = await qlik.get_dimension_list_detailed()
-    TerminalHelper.print_bullet_from_array(dimensions, ["Title", "Description", "Tags", "Field Definitions", "Field Labels", "Type"])
+    #dimensions = await qlik.get_dimension_list_detailed()
+    #TerminalHelper.print_bullet_from_array(dimensions, ["Title", "Description", "Tags", "Field Definitions", "Field Labels", "Type"])
   
-    measures = await qlik.get_measure_list_detailed()
-    TerminalHelper.print_bullet_from_array(measures,["Title", "Tags", "Expression", "Label", "Description"])
-   
-    variables = await qlik.get_var_list_detailed()
-    TerminalHelper.write_title('   ------- Variables ---------')
-    TerminalHelper.print_bullet_from_array(variables,["ID","Title", "Valuen", "Tags"])
+    #measures = await qlik.get_measure_list_detailed()
+    #print(measures)
+    #TerminalHelper.print_bullet_from_array(measures,["ID","Title", "Tags", "Expression", "Label", "Description"])
+    #measureId = "VncSmHw"
+    #measure_data = await qlik.get_measure(measureId)
+    #print(json.dumps(measure_data, indent=2))
+    #variables = await qlik.get_var_list_detailed()
+    #TerminalHelper.write_title('   ------- Variables ---------')
+    #TerminalHelper.print_bullet_from_array(variables,["ID","Title", "Valuen", "Tags"])
    
 
 

@@ -44,7 +44,7 @@ async def export_masteritems():
 
     ws2 = wb.create_sheet(title="Masteritems")
     
-    columns = ["ID", "Title", "Description", "Expression", "Tags", "Type", "ItemType"]
+    columns = ["ID", "Title", "Label", "Description", "Expression", "Tags", "Type", "ItemType"]
     for col_num, column_title in enumerate(columns, start=1):
         col_letter = get_column_letter(col_num)
         ws2[f"{col_letter}1"] = column_title  
@@ -53,13 +53,14 @@ async def export_masteritems():
         # Replace special characters in all fields except ID (item[0]) and Title (item[1])
        
         # Write values to sheet
-        ws2[f"A{row_num}"] = item[0]  # ID
-        ws2[f"B{row_num}"] = item[1]  # Title
-        ws2[f"C{row_num}"] = sanitize_excel_value(item[2])  # Description
-        ws2[f"D{row_num}"] = sanitize_excel_value(item[3])  # Expression
-        ws2[f"E{row_num}"] = sanitize_excel_value(', '.join(str(tag) for tag in item[4]) if isinstance(item[4], list) else item[4])
-        ws2[f"F{row_num}"] = sanitize_excel_value(item[5])  # Type
-        ws2[f"G{row_num}"] = sanitize_excel_value(item[6])  # ItemType
+        ws2[f"A{row_num}"] = item[0]  
+        ws2[f"B{row_num}"] = item[1]  
+        ws2[f"C{row_num}"] = sanitize_excel_value(item[2])  
+        ws2[f"D{row_num}"] = sanitize_excel_value(item[3])  
+        ws2[f"E{row_num}"] = sanitize_excel_value(item[4]) 
+        ws2[f"F{row_num}"] = sanitize_excel_value(item[5])
+        ws2[f"G{row_num}"] = sanitize_excel_value(item[6])  
+        ws2[f"H{row_num}"] = sanitize_excel_value(item[7])  
 
     
     excel_filename = f"exports/{app_name} MasterItems.xlsx"

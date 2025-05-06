@@ -420,9 +420,9 @@ class QlikWrapper:
                     layout = await self.get_dimension(dim_id)
 
                     description = layout.get("qDim", {}).get("descriptionExpression", "")
-                    tags = layout.get("qMeta", {}).get("tags", [])
-                    field_defs = layout.get("qDim", {}).get("qFieldDefs", [])
-                    field_labels = layout.get("qDim", {}).get("qFieldLabels", [])
+                    tags = ", ".join(layout.get("qMeta", {}).get("tags", ""))
+                    field_defs = layout.get("qDim", {}).get("qFieldDefs", "")
+                    field_labels = layout.get("qDim", {}).get("qLabelExpression", "")
                     grouping = layout.get("qDim", {}).get("qGrouping", "N")
                     dim_type = "multi" if grouping == "M" else "single"
 
@@ -464,9 +464,9 @@ class QlikWrapper:
                     detailed_measures.append([
                         measure_id,
                         measure_title,  # title
-                        layout.get("qMeta", {}).get("tags", []),  # tags
+                        ", ".join(layout.get("qMeta", {}).get("tags", "")),
                         layout.get("qMeasure", {}).get("qDef", ""),  # expression
-                        layout.get("qMeasure", {}).get("qLabel", ""),  # label
+                        layout.get("qMeasure", {}).get("qLabelExpression", ""),  # label
                         layout.get("qMeasure", {}).get("descriptionExpression", "")  # description
                     ])
                 except Exception as e:
@@ -490,7 +490,7 @@ class QlikWrapper:
                 item.get("qInfo", {}).get("qId", ""),
                 item.get("qName", ""),
                 item.get("qDefinition", ""),
-                item.get("qData", {}).get("tags", [])
+                ", ".join(item.get("qMeta", {}).get("tags", ""))
             ]
             for item in raw_vars
         ]
@@ -514,7 +514,7 @@ class QlikWrapper:
             list: A list of lists, each containing the requested columns.
         """
         # Default columns if none are provided
-        all_columns = ["ID", "Title", "Description", "Value", "Tags", "Type", "ItemType"]
+        all_columns = ["ID", "Title", "Label", "Description", "Expression", "Tags", "Type", "ItemType"]
         if columns is None:
             columns = all_columns
 
@@ -530,19 +530,20 @@ class QlikWrapper:
         for dim in dimensions:
             row = []
             if "ID" in columns:
-                row.append(dim[0])  # ID
+                row.append(dim[0]) 
             if "Title" in columns:
-                row.append(dim[1])  # Title
+                row.append(dim[1])  
+            if "Label" in columns:
+                row.append(dim[5])  
             if "Description" in columns:
-                # Only append Description if it exists
-                description = dim[2] if dim[2] else ""  # Default to empty if no description
+                description = dim[2] if dim[2] else ""  
                 row.append(description)
-            if "Value" in columns:
-                row.append(dim[3])  # Field Definitions (Expression for Dimensions)
+            if "Expression" in columns:
+                row.append(dim[4])  
             if "Tags" in columns:
-                row.append(dim[4])  # Field Labels (Label for Dimensions)
+                row.append(dim[3])  
             if "Type" in columns:
-                row.append(dim[5])  # Type (multi or single)
+                row.append(dim[6])  # Type (multi or single)
             if "ItemType" in columns:
                 row.append("Dimension")
             combined_data.append(row)
@@ -551,19 +552,20 @@ class QlikWrapper:
         for measure in measures:
             row = []
             if "ID" in columns:
-                row.append(measure[0])  # ID
+                row.append(measure[0])
             if "Title" in columns:
-                row.append(measure[1])  # Title
+                row.append(measure[1])
+            if "Label" in columns:
+                row.append(dim[4])  
             if "Description" in columns:
-                # Only append Description if it exists
-                description = measure[5] if measure[5] else ""  # Default to empty if no description
+                description = measure[5] if measure[5] else ""  
                 row.append(description)
-            if "Value" in columns:
-                row.append(measure[3])  # Expression
+            if "Expression" in columns:
+                row.append(measure[3])  
             if "Tags" in columns:
-                row.append(measure[2])  # Tags
+                row.append(measure[2]) 
             if "Type" in columns:
-                row.append("")  # Type is not applicable for Measures
+                row.append(" ") 
             if "ItemType" in columns:
                 row.append("Measure")
             combined_data.append(row)
@@ -573,18 +575,19 @@ class QlikWrapper:
             for variable in variables:
                 row = []
                 if "ID" in columns:
-                    row.append(variable[0])  # ID
+                    row.append(variable[0])  
                 if "Title" in columns:
-                    row.append(variable[1])  # Title
+                    row.append(variable[1]) 
+                if "Label" in columns:
+                    row.append("")   
                 if "Description" in columns:
-                    # Variables do not have Description in the data, so append empty string
-                    row.append("")  # Description
-                if "Value" in columns:
-                    row.append(variable[2])  # Value (qDefinition for Variables)
+                    row.append(" ") 
+                if "Expression" in columns:
+                    row.append(variable[2])  
                 if "Tags" in columns:
-                    row.append(variable[3])  # Tags
+                    row.append(variable[3])  
                 if "Type" in columns:
-                    row.append("")  # Type is not applicable for Variables
+                    row.append(" ")  
                 if "ItemType" in columns:
                     row.append("Variable")
                 combined_data.append(row)
